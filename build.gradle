@@ -14,4 +14,6 @@ dependencies {
     testCompile 'junit:junit:4.12'
 }
 
-mainClassName = "${project.name}.App"
+mainClassName = "com.mpdeimos.gitlabslackbot.App"
+
+task stage(dependsOn: ['clean', 'installDist'])
