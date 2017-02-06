@@ -1,0 +1,17 @@
+apply plugin: 'java'
+apply plugin: 'application'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+	compile "com.sparkjava:spark-core:2.5.4"
+	compile 'org.slf4j:slf4j-api:1.7.21'
+    
+    runtime 'org.slf4j:slf4j-simple:1.7.22'
+
+    testCompile 'junit:junit:4.12'
+}
+
+mainClassName = "${project.name}.App"
