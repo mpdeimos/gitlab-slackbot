@@ -9,4 +9,8 @@ public interface AppConfig extends Config
 	@Key("PORT")
 	@DefaultValue("8080")
 	public int serverPort();
+
+	/** The slack webook endpoint. */
+	@Key("SLACK_WEBHOOK")
+	public String slackWebhook();
 }

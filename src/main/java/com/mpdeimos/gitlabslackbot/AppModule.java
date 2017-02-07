@@ -1,11 +1,20 @@
 package com.mpdeimos.gitlabslackbot;
 
+import com.mpdeimos.gitlabslackbot.hook.Hook;
+import com.mpdeimos.gitlabslackbot.hook.PipelineHook;
+
+import java.util.Arrays;
+import java.util.List;
+
 import org.aeonbits.owner.ConfigFactory;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 
+import net.gpedro.integrations.slack.SlackApi;
 import spark.Service;
 
 /** Guice default application module. */
@@ -25,6 +34,29 @@ public class AppModule extends AbstractModule
 	public Service provideService(AppConfig config)
 	{
 		return Service.ignite().port(config.serverPort());
+	}
+
+	/** Provides the Slack API. */
+	@Provides
+	@Singleton
+	public SlackApi provideSlackApi(AppConfig config)
+	{
+		return new SlackApi(config.slackWebhook());
+	}
+
+	/** Provides a list of all hook processors. */
+	@Provides
+	public List<Hook<?>> provideHookProcessor(PipelineHook pipelineHook)
+	{
+		return Arrays.asList(pipelineHook);
+	}
+
+	/** Provides GSON. */
+	@Provides
+	@Singleton
+	public Gson provideGson()
+	{
+		return new GsonBuilder().setPrettyPrinting().create();
 	}
 
 	/** {@inheritDoc} */
