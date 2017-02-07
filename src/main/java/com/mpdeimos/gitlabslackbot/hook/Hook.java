@@ -12,5 +12,5 @@ public interface Hook<T>
 	public Class<T> eventClass();
 
 	/** Handles the event. */
-	public void handleEvent(T event);
+	public void handleEvent(T event) throws Exception;
 }
