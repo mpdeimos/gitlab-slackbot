@@ -14,6 +14,12 @@ public interface AppConfig extends Config
 	@Key("SLACK_WEBHOOK")
 	public String slackWebhook();
 
+	/**
+	 * The slack channel to post into (leave empty to use integration default).
+	 */
+	@Key("SLACK_CHANNEL")
+	public String slackChannel();
+
 	/** The GitLab token to verify a request (may be null). */
 	@Key("GITLAB_TOKEN")
 	public String gitlabToken();

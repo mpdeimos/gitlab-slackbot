@@ -3,8 +3,11 @@ package com.mpdeimos.gitlabslackbot.hook;
 import com.mpdeimos.gitlabslackbot.AppConfig;
 import com.mpdeimos.gitlabslackbot.hook.PipelineHook.EventData;
 import com.mpdeimos.gitlabslackbot.hook.PipelineHook.EventData.EStatus;
+import com.mpdeimos.gitlabslackbot.hook.PipelineHook.EventData.Project;
 
+import java.util.Arrays;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import com.google.gson.annotations.SerializedName;
 import com.google.inject.Inject;
@@ -51,25 +54,61 @@ public class PipelineHook implements Hook<EventData>
 			return;
 		}
 
-		SlackMessage message = new SlackMessage(
-				"Pipeline failed for *" + event.project.name + "* on branch *"
-						+ event.attributes.ref + "*");
-
-		SlackField field = new SlackField();
-		field.setTitle(event.commit.message);
-
-		String value = "<" + event.project.url + "/pipelines/"
-				+ event.attributes.id + "|Pipeline>";
-		value += " \u2022 <" + event.commit.url + "|Commit> by "
-				+ event.commit.author.name;
-		field.setValue(value);
-
-		SlackAttachment attachment = new SlackAttachment().setFallback(
-				event.commit.message).addFields(
-						field).setColor("danger");
-		message.addAttachments(attachment);
+		SlackMessage message = createSlackMessage(event);
 
 		this.slack.call(message);
+	}
+
+	/** Creates a slack message for the event. */
+	private SlackMessage createSlackMessage(EventData event)
+	{
+		SlackMessage message = new SlackMessage(
+				createProjectLink(
+						event.project,
+						"pipelines",
+						event.attributes.id,
+						"Pipeline #" + event.attributes.id) + " failed for *"
+						+ event.project.name + "* on branch *"
+						+ event.attributes.ref + "*");
+		message.setChannel(this.config.slackChannel());
+
+		SlackAttachment attachment = new SlackAttachment().setFallback(
+				event.commit.message);
+		attachment.setColor("danger");
+		attachment.addFields(createPipelineField(event));
+
+		message.addAttachments(attachment);
+		return message;
+	}
+
+	/** Create a message attachment containing pipeline information. */
+	private SlackField createPipelineField(EventData event)
+	{
+		String value = "Commit <" + event.commit.url + "|"
+				+ event.commit.id.substring(0, 8) + "> ";
+		value += " by " + event.commit.author.name;
+		value += " \u2022 Failing builds: ";
+		value += Arrays.stream(event.builds).filter(
+				b -> b.status == EStatus.FAILED).map(
+						b -> createProjectLink(
+								event.project,
+								"builds",
+								b.id,
+								b.name)).collect(
+										Collectors.joining(", "));
+
+		return new SlackField().setTitle(event.commit.message).setValue(value);
+	}
+
+	/** Creates a Slack link to a project service. */
+	private String createProjectLink(
+			Project project,
+			String type,
+			int id,
+			String text)
+	{
+		return "<" + project.url + "/pipelines/"
+				+ id + "|" + text + ">";
 	}
 
 	/** Verifies that only allowed projects are processed. */
@@ -110,6 +149,8 @@ public class PipelineHook implements Hook<EventData>
 
 		public Project project;
 
+		public Build[] builds;
+
 		public static class PipelineAttributes
 		{
 			public int id;
@@ -136,6 +177,8 @@ public class PipelineHook implements Hook<EventData>
 
 		public static class Commit
 		{
+			public String id;
+
 			public String message;
 
 			public String url;
@@ -157,6 +200,17 @@ public class PipelineHook implements Hook<EventData>
 		public static class Author
 		{
 			public String name;
+		}
+
+		public static class Build
+		{
+			public int id;
+
+			public String name;
+
+			public String stage;
+
+			public EStatus status;
 		}
 	}
 
