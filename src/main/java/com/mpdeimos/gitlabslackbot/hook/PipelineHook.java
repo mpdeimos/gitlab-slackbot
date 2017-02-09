@@ -107,7 +107,7 @@ public class PipelineHook implements Hook<EventData>
 			int id,
 			String text)
 	{
-		return "<" + project.url + "/pipelines/"
+		return "<" + project.url + "/" + type + "/"
 				+ id + "|" + text + ">";
 	}
 
